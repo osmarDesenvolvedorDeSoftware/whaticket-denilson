@@ -670,6 +670,7 @@ const messages = {
           cancel: "Cancelar",
           test: "Testar Bot",
           gcTest: "Testar 1 contato",
+          gcSyncNow: "Sincronizar agora",
         },
         messages: {
           testSuccess: "Integração testada com sucesso!",
@@ -677,6 +678,8 @@ const messages = {
           editSuccess: "Integração editada com sucesso.",
           gcTestSuccess: "Teste concluído com sucesso.",
           gcSaveFirst: "Salve a integração antes de testar.",
+          gcSyncSuccess: "Sincronizacao concluida com sucesso.",
+          gcSyncError: "Falha na sincronizacao.",
           gcPingChecking: "Verificando conexao...",
           gcPingError: "Erro ao verificar conexao.",
           gcPingUnknown: "Status desconhecido.",

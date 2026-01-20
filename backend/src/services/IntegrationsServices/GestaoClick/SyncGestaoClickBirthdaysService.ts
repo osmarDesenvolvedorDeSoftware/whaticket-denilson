@@ -151,66 +151,75 @@ const upsertContactFromCliente = async (
   return true;
 };
 
+export const syncGestaoClickIntegration = async (
+  integration: QueueIntegrations
+): Promise<{ updatedCount: number; lastError: string | null }> => {
+  let updatedCount = 0;
+  const companyId = integration.companyId;
+
+  try {
+    const cfg = parseConfig(integration.jsonContent);
+    const accessToken = cfg.gcAccessToken;
+    const secretToken = cfg.gcSecretToken;
+    const baseUrl = cfg.gcBaseUrl || DEFAULT_BASE_URL;
+
+    if (!accessToken || !secretToken) {
+      throw new Error("GestaoClick tokens missing");
+    }
+
+    const client = new GestaoClickClient({
+      baseUrl,
+      accessToken,
+      secretToken
+    });
+
+    let page = 1;
+    let totalPages = 1;
+    do {
+      const response = await client.listClientes(page);
+      const clientes = response.data || [];
+      totalPages = response.meta?.total_paginas || totalPages;
+
+      for (const cliente of clientes) {
+        const updated = await upsertContactFromCliente(companyId, cliente);
+        if (updated) updatedCount += 1;
+      }
+
+      page += 1;
+      if (page <= totalPages) {
+        await sleep(REQUEST_DELAY_MS);
+      }
+    } while (page <= totalPages);
+
+    await integration.update({
+      gcLastSyncAt: new Date(),
+      gcUpdatedCount: updatedCount,
+      gcLastError: null
+    });
+
+    return { updatedCount, lastError: null };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    logger.error(
+      { error: message, integrationId: integration.id, companyId },
+      "GestaoClick sync failed"
+    );
+    await integration.update({
+      gcLastSyncAt: new Date(),
+      gcUpdatedCount: updatedCount,
+      gcLastError: message
+    });
+    return { updatedCount, lastError: message };
+  }
+};
+
 const SyncGestaoClickBirthdaysService = async (): Promise<void> => {
   const integrations = await QueueIntegrations.findAll({
     where: { type: "gestaoclick" }
   });
 
   for (const integration of integrations) {
-    let updatedCount = 0;
-    const companyId = integration.companyId;
-
-    try {
-      const cfg = parseConfig(integration.jsonContent);
-      const accessToken = cfg.gcAccessToken;
-      const secretToken = cfg.gcSecretToken;
-      const baseUrl = cfg.gcBaseUrl || DEFAULT_BASE_URL;
-
-      if (!accessToken || !secretToken) {
-        throw new Error("GestaoClick tokens missing");
-      }
-
-      const client = new GestaoClickClient({
-        baseUrl,
-        accessToken,
-        secretToken
-      });
-
-      let page = 1;
-      let totalPages = 1;
-      do {
-        const response = await client.listClientes(page);
-        const clientes = response.data || [];
-        totalPages = response.meta?.total_paginas || totalPages;
-
-        for (const cliente of clientes) {
-          const updated = await upsertContactFromCliente(companyId, cliente);
-          if (updated) updatedCount += 1;
-        }
-
-        page += 1;
-        if (page <= totalPages) {
-          await sleep(REQUEST_DELAY_MS);
-        }
-      } while (page <= totalPages);
-
-      await integration.update({
-        gcLastSyncAt: new Date(),
-        gcUpdatedCount: updatedCount,
-        gcLastError: null
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      logger.error(
-        { error: message, integrationId: integration.id, companyId },
-        "GestaoClick sync failed"
-      );
-      await integration.update({
-        gcLastSyncAt: new Date(),
-        gcUpdatedCount: updatedCount,
-        gcLastError: message
-      });
-    }
+    await syncGestaoClickIntegration(integration);
   }
 };
 

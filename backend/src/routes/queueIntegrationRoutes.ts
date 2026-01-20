@@ -27,5 +27,10 @@ queueIntegrationRoutes.get(
   isAuth,
   QueueIntegrationController.pingGestaoClick
 );
+queueIntegrationRoutes.post(
+  "/queueIntegration/:integrationId/sync-gestaoclick",
+  isAuth,
+  QueueIntegrationController.syncGestaoClick
+);
 
 export default queueIntegrationRoutes;

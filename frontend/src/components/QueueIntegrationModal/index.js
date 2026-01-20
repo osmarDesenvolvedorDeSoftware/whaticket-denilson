@@ -355,6 +355,35 @@ const QueueIntegration = ({ open, onClose, integrationId }) => {
     }
   };
 
+  const handleSyncGestaoClick = async () => {
+    if (!integrationId) {
+      toast.error(i18n.t("queueIntegrationModal.messages.gcSaveFirst"));
+      return;
+    }
+    try {
+      const { data } = await api.post(
+        `/queueIntegration/${integrationId}/sync-gestaoclick`
+      );
+      setIntegration(prevState => ({
+        ...prevState,
+        gcUpdatedCount:
+          typeof data?.updatedCount === "number"
+            ? data.updatedCount
+            : prevState.gcUpdatedCount,
+        gcLastError:
+          data?.lastError !== undefined ? data.lastError : prevState.gcLastError,
+        gcLastSyncAt: data?.lastSyncAt || prevState.gcLastSyncAt
+      }));
+      if (data?.ok) {
+        toast.success(data?.message || i18n.t("queueIntegrationModal.messages.gcSyncSuccess"));
+      } else {
+        toast.warning(data?.message || i18n.t("queueIntegrationModal.messages.gcSyncError"));
+      }
+    } catch (err) {
+      toastError(err);
+    }
+  };
+
   return (
     <div className={classes.root}>
       <Dialog
@@ -557,6 +586,16 @@ const QueueIntegration = ({ open, onClose, integrationId }) => {
                             disabled={!values.gcTestNumber}
                           >
                             {i18n.t("queueIntegrationModal.buttons.gcTest")}
+                          </Button>
+                        </Grid>
+                        <Grid item xs={12} md={6} xl={6}>
+                          <Button
+                            onClick={handleSyncGestaoClick}
+                            color="primary"
+                            variant="contained"
+                            style={{ marginTop: 8 }}
+                          >
+                            {i18n.t("queueIntegrationModal.buttons.gcSyncNow")}
                           </Button>
                         </Grid>
                         <Grid item xs={12} md={6} xl={6}>
