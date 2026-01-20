@@ -14,6 +14,16 @@ import { Op } from "sequelize";
 import moment from "moment-timezone";
 import { redisClient } from "../../libs/redisClient";
 import CreateMessageService from "../MessageServices/CreateMessageService";
+import delay from "../../utils/delay";
+
+const BIRTHDAY_SEND_MIN_DELAY_MS = 60 * 1000;
+const BIRTHDAY_SEND_MAX_DELAY_MS = 6 * 60 * 1000;
+
+const getRandomBirthdayDelayMs = (): number => {
+  const min = BIRTHDAY_SEND_MIN_DELAY_MS;
+  const max = BIRTHDAY_SEND_MAX_DELAY_MS;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
 interface BirthdayPerson {
   id: number;
@@ -397,6 +407,7 @@ export class BirthdayService {
         // Processar aniversários de contatos (envio automático se habilitado)
         for (const contactBirthday of contacts) {
           if (settings.contactBirthdayEnabled) {
+            await delay(getRandomBirthdayDelayMs());
             await this.sendBirthdayMessageToContact(
               contactBirthday.id,
               companyIdNum
