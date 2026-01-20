@@ -77,6 +77,22 @@ const DialogflowSchema = Yup.object().shape({
   // language: Yup.string().min(2, "Too Short!").max(50, "Too Long!").required(),
 });
 
+const stripGcKeysFromJson = (jsonContent) => {
+  if (!jsonContent) return jsonContent;
+  try {
+    const parsed = JSON.parse(jsonContent);
+    if (!parsed || typeof parsed !== "object") return jsonContent;
+    delete parsed.gcAccessToken;
+    delete parsed.gcSecretToken;
+    delete parsed.gcBaseUrl;
+    const keys = Object.keys(parsed);
+    if (!keys.length) return "";
+    return JSON.stringify(parsed);
+  } catch (error) {
+    return jsonContent;
+  }
+};
+
 const QueueIntegration = ({ open, onClose, integrationId }) => {
   const classes = useStyles();
 
@@ -124,6 +140,10 @@ const QueueIntegration = ({ open, onClose, integrationId }) => {
         setIntegration((prevState) => ({
           ...prevState,
           ...data,
+          jsonContent:
+            data?.type === "gestaoclick"
+              ? data.jsonContent
+              : stripGcKeysFromJson(data.jsonContent),
           sgpIeSenha: configFromJson.sgpIeSenha || prevState.sgpIeSenha,
           sgpUrl: configFromJson.sgpUrl || prevState.sgpUrl,
           sgpWidePayToken: configFromJson.sgpWidePayToken || prevState.sgpWidePayToken,
@@ -205,6 +225,12 @@ const QueueIntegration = ({ open, onClose, integrationId }) => {
       }
       // Persist SGP settings into jsonContent
       let payload = { ...values };
+      if (values.type !== "gestaoclick") {
+        const sanitized = stripGcKeysFromJson(values.jsonContent);
+        if (sanitized !== values.jsonContent) {
+          payload.jsonContent = sanitized;
+        }
+      }
       if (values.type === "SGP") {
         let baseJson = {};
         try {
@@ -893,3 +919,4 @@ const QueueIntegration = ({ open, onClose, integrationId }) => {
 };
 
 export default QueueIntegration;
+

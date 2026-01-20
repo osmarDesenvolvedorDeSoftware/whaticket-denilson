@@ -70,6 +70,29 @@ export class GestaoClickClient {
       throw error;
     }
   }
+
+  async listClientesByTelefone(telefone: string): Promise<GestaoClickResponse> {
+    try {
+      const { data } = await axios.get<GestaoClickResponse>(
+        `${this.baseUrl}/clientes`,
+        {
+          params: { telefone },
+          headers: {
+            "access-token": this.accessToken,
+            "secret-access-token": this.secretToken
+          }
+        }
+      );
+      return data;
+    } catch (error) {
+      const err = error as AxiosError;
+      logger.error(
+        { err: err?.message, url: this.baseUrl, telefone },
+        "GestaoClick listClientesByTelefone error"
+      );
+      throw error;
+    }
+  }
 }
 
 export default GestaoClickClient;

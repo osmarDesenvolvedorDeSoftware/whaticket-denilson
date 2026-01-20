@@ -115,10 +115,37 @@ const parseConfig = (jsonContent?: string): GestaoClickConfig => {
   }
 };
 
+const pickClienteByBirthDate = (
+  clientes: GestaoClickCliente[]
+): GestaoClickCliente | null => {
+  if (!clientes.length) return null;
+  for (const cliente of clientes) {
+    if (parseBirthDate(cliente.data_nascimento)) {
+      return cliente;
+    }
+  }
+  return clientes[0];
+};
+
 const findClienteByPhone = async (
   client: GestaoClickClient,
   targetPhone: string
 ): Promise<GestaoClickCliente | null> => {
+  const rawPhone = onlyDigits(targetPhone);
+  if (rawPhone) {
+    const response = await client.listClientesByTelefone(rawPhone);
+    const clientes = response.data || [];
+    const matched = clientes.filter(cliente => {
+      const phone =
+        normalizePhone(cliente.celular) || normalizePhone(cliente.telefone);
+      return phone === targetPhone;
+    });
+    const picked = pickClienteByBirthDate(matched);
+    if (picked) return picked;
+    const fallback = pickClienteByBirthDate(clientes);
+    if (fallback) return fallback;
+  }
+
   let page = 1;
   while (page <= TEST_SEARCH_PAGES) {
     const response = await client.listClientes(page);
