@@ -659,6 +659,7 @@ const messages = {
           gcSaveFirst: "Save the integration before testing.",
           gcSyncSuccess: "Sync completed successfully.",
           gcSyncError: "Sync failed.",
+          gcSyncStarted: "Sync started. Check the contacts screen.",
           gcPingChecking: "Checking connection...",
           gcPingError: "Failed to check connection.",
           gcPingUnknown: "Unknown status.",

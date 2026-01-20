@@ -680,6 +680,7 @@ const messages = {
           gcSaveFirst: "Salve a integração antes de testar.",
           gcSyncSuccess: "Sincronizacao concluida com sucesso.",
           gcSyncError: "Falha na sincronizacao.",
+          gcSyncStarted: "Sincronizacao iniciada. Acompanhe pela tela de contatos.",
           gcPingChecking: "Verificando conexao...",
           gcPingError: "Erro ao verificar conexao.",
           gcPingUnknown: "Status desconhecido.",

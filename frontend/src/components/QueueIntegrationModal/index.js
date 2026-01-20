@@ -361,6 +361,7 @@ const QueueIntegration = ({ open, onClose, integrationId }) => {
       return;
     }
     try {
+      toast.info(i18n.t("queueIntegrationModal.messages.gcSyncStarted"));
       const { data } = await api.post(
         `/queueIntegration/${integrationId}/sync-gestaoclick`
       );
