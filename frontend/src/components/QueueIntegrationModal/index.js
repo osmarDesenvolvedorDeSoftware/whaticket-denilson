@@ -125,6 +125,10 @@ const QueueIntegration = ({ open, onClose, integrationId }) => {
   };
 
   const [integration, setIntegration] = useState(initialState);
+  const [gcPingStatus, setGcPingStatus] = useState({
+    status: "idle",
+    message: ""
+  });
 
   useEffect(() => {
     (async () => {
@@ -164,8 +168,35 @@ const QueueIntegration = ({ open, onClose, integrationId }) => {
 
     return () => {
       setIntegration(initialState);
+      setGcPingStatus({ status: "idle", message: "" });
     };
   }, [integrationId, open]);
+
+  useEffect(() => {
+    let intervalId;
+    const shouldPing = open && integrationId && integration.type === "gestaoclick";
+    if (!shouldPing) return undefined;
+
+    const doPing = async () => {
+      try {
+        setGcPingStatus({ status: "loading", message: i18n.t("queueIntegrationModal.messages.gcPingChecking") });
+        const { data } = await api.get(`/queueIntegration/${integrationId}/ping-gestaoclick`);
+        setGcPingStatus({
+          status: data?.ok ? "ok" : "error",
+          message: data?.message || i18n.t("queueIntegrationModal.messages.gcPingUnknown")
+        });
+      } catch (err) {
+        setGcPingStatus({
+          status: "error",
+          message: i18n.t("queueIntegrationModal.messages.gcPingError")
+        });
+      }
+    };
+
+    doPing();
+    intervalId = setInterval(doPing, 5 * 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, [open, integrationId, integration.type]);
 
   const handleClose = () => {
     onClose();
@@ -517,6 +548,16 @@ const QueueIntegration = ({ open, onClose, integrationId }) => {
                           <TextField
                             label={i18n.t("queueIntegrationModal.form.gcLastSyncAt")}
                             value={values.gcLastSyncAt || ""}
+                            fullWidth
+                            variant="outlined"
+                            margin="dense"
+                            InputProps={{ readOnly: true }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6} xl={6}>
+                          <TextField
+                            label={i18n.t("queueIntegrationModal.form.gcPingStatus")}
+                            value={gcPingStatus.message || ""}
                             fullWidth
                             variant="outlined"
                             margin="dense"

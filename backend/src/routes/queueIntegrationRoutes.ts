@@ -22,5 +22,10 @@ queueIntegrationRoutes.post(
   isAuth,
   QueueIntegrationController.testGestaoClickContact
 );
+queueIntegrationRoutes.get(
+  "/queueIntegration/:integrationId/ping-gestaoclick",
+  isAuth,
+  QueueIntegrationController.pingGestaoClick
+);
 
 export default queueIntegrationRoutes;

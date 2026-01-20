@@ -634,6 +634,7 @@ const messages = {
           gcLastSyncAt: "Last sync",
           gcUpdatedCount: "Updated contacts",
           gcLastError: "Last error",
+          gcPingStatus: "Connection status",
           typebotSlug: "Typebot - Slug",
           typebotExpires: "Expiration time in minutes",
           typebotKeywordFinish: "Keyword to finish the ticket",
@@ -655,6 +656,9 @@ const messages = {
           editSuccess: "Integration edited successfully.",
           gcTestSuccess: "Test completed successfully.",
           gcSaveFirst: "Save the integration before testing.",
+          gcPingChecking: "Checking connection...",
+          gcPingError: "Failed to check connection.",
+          gcPingUnknown: "Unknown status.",
         },
       },
       userModal: {

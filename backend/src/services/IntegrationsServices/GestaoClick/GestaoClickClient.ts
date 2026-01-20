@@ -71,6 +71,28 @@ export class GestaoClickClient {
     }
   }
 
+  async listLojas(): Promise<GestaoClickResponse> {
+    try {
+      const { data } = await axios.get<GestaoClickResponse>(
+        `${this.baseUrl}/lojas`,
+        {
+          headers: {
+            "access-token": this.accessToken,
+            "secret-access-token": this.secretToken
+          }
+        }
+      );
+      return data;
+    } catch (error) {
+      const err = error as AxiosError;
+      logger.error(
+        { err: err?.message, url: this.baseUrl },
+        "GestaoClick listLojas error"
+      );
+      throw error;
+    }
+  }
+
   async listClientesByTelefone(telefone: string): Promise<GestaoClickResponse> {
     try {
       const { data } = await axios.get<GestaoClickResponse>(

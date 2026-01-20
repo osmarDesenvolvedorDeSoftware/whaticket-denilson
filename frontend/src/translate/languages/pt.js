@@ -655,6 +655,7 @@ const messages = {
           gcLastSyncAt: "Última sincronização",
           gcUpdatedCount: "Contatos atualizados",
           gcLastError: "Último erro",
+          gcPingStatus: "Status conexao",
           typebotSlug: "Typebot - Slug",
           typebotExpires: "Tempo em minutos para expirar uma conversa",
           typebotKeywordFinish: "Palavra para finalizar o ticket",
@@ -676,6 +677,9 @@ const messages = {
           editSuccess: "Integração editada com sucesso.",
           gcTestSuccess: "Teste concluído com sucesso.",
           gcSaveFirst: "Salve a integração antes de testar.",
+          gcPingChecking: "Verificando conexao...",
+          gcPingError: "Erro ao verificar conexao.",
+          gcPingUnknown: "Status desconhecido.",
         },
       },
       userModal: {

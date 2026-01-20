@@ -7,6 +7,7 @@ import ShowQueueIntegrationService from "../services/QueueIntegrationServices/Sh
 import TestSessionIntegrationService from "../services/QueueIntegrationServices/TestSessionDialogflowService";
 import UpdateQueueIntegrationService from "../services/QueueIntegrationServices/UpdateQueueIntegrationService";
 import TestGestaoClickContactService from "../services/IntegrationsServices/GestaoClick/TestGestaoClickContactService";
+import PingGestaoClickService from "../services/IntegrationsServices/GestaoClick/PingGestaoClickService";
 
 type IndexQuery = {
   searchParam: string;
@@ -134,6 +135,18 @@ export const testGestaoClickContact = async (
     companyId,
     testNumber
   );
+
+  return res.status(200).json(result);
+};
+
+export const pingGestaoClick = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { integrationId } = req.params;
+  const { companyId } = req.user;
+
+  const result = await PingGestaoClickService(integrationId, companyId);
 
   return res.status(200).json(result);
 };
