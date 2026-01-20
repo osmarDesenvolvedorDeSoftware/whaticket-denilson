@@ -6,8 +6,8 @@ import BirthdaySettings from "../models/BirthdaySettings";
 const CronJob = require("cron").CronJob;
 import delay from "../utils/delay";
 
-const BIRTHDAY_SEND_MIN_DELAY_MS = 60 * 1000;
-const BIRTHDAY_SEND_MAX_DELAY_MS = 6 * 60 * 1000;
+const BIRTHDAY_SEND_MIN_DELAY_MS = 2 * 60 * 1000;
+const BIRTHDAY_SEND_MAX_DELAY_MS = 10 * 60 * 1000;
 
 const getRandomBirthdayDelayMs = (): number => {
   const min = BIRTHDAY_SEND_MIN_DELAY_MS;

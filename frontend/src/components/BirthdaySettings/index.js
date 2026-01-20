@@ -415,7 +415,7 @@ const BirthdaySettings = () => {
                 helperText="Horário em que as mensagens automáticas serão enviadas"
               />
               <Typography className={classes.helpText}>
-                Envio com atraso aleatorio entre 1 e 6 minutos por mensagem.
+                Envio com atraso aleatorio entre 2 e 10 minutos por mensagem.
               </Typography>
             </Grid>
 
