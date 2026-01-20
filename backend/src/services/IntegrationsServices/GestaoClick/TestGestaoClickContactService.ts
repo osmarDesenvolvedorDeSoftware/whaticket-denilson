@@ -132,8 +132,12 @@ const findClienteByPhone = async (
   targetPhone: string
 ): Promise<GestaoClickCliente | null> => {
   const rawPhone = onlyDigits(targetPhone);
+  const telefoneParam =
+    rawPhone.startsWith("55") && (rawPhone.length === 12 || rawPhone.length === 13)
+      ? rawPhone.slice(2)
+      : rawPhone;
   if (rawPhone) {
-    const response = await client.listClientesByTelefone(rawPhone);
+    const response = await client.listClientesByTelefone(telefoneParam);
     const clientes = response.data || [];
     const matched = clientes.filter(cliente => {
       const phone =
