@@ -200,7 +200,7 @@ async function apiMessageQueue() {
                 const CheckValidNumber = await CheckContactNumber(message.number, message.companyId);
                 const validNumber = CheckValidNumber.jid.split("@")[0];
 
-                const pushName = message?.pushName || "";
+                const pushName = (message as { pushName?: string }).pushName || "";
 
                 const contactData = {
                   name: pushName || `Contato ${validNumber}`,
