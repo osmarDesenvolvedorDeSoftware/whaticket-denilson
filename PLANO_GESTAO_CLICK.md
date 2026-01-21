@@ -109,6 +109,12 @@ Objetivo: evitar contatos com nome numérico ou LID e corrigir os já existentes
   - só atualiza `name` quando `contact.name === number`, então nomes numéricos
     permanecem se não houver outro gatilho.
 - `backend/src/jobs/LidSyncJob.ts`: sincroniza `lid` mas não corrige `name`.
+- Duplicação LID/numero:
+  - `backend/src/services/WbotServices/verifyContact.ts` cria/atualiza contato com `lid`
+    e pode gerar um segundo contato quando `remoteJid` vem em formato `@lid`.
+  - `backend/src/services/ContactServices/CreateOrUpdateContactService.ts` busca por `lid`
+    e por `number`, mas ainda pode criar dois registros quando o LID chega
+    antes do número normalizado.
 
 ### Regras de normalizacao de nome
 - Considerar inválido se:
@@ -128,6 +134,15 @@ Objetivo: evitar contatos com nome numérico ou LID e corrigir os já existentes
 - `backend/src/services/ContactServices/CreateOrUpdateContactService.ts`:
   - se `contact.name` inválido, substituir pelo melhor nome disponível
   - preservar nomes válidos (não sobrescrever nomes bons)
+- Ao receber mensagem com `pushName`, atualizar o nome do contato
+  quando o nome atual for inválido/número/LID.
+- Deduplicação LID/numero:
+  - Garantir que, quando `lid` for detectado, o contato seja sempre
+    associado ao `number` normalizado (mesmo registro).
+  - Se já existir contato por `number`, atualizar `lid` nele
+    e evitar criar novo contato com `number` = LID.
+  - Se existir contato por `lid`, migrar `number` para o formato correto
+    e consolidar tickets/mensagens (reusar lógica de `verifyContact`).
 
 ### Job de limpeza (backfill)
 - Script/Job:
@@ -140,3 +155,44 @@ Objetivo: evitar contatos com nome numérico ou LID e corrigir os já existentes
 ### Observacoes
 - Não alterar contatos de grupo (isGroup = true) sem validação específica.
 - Evitar sobrescrever nomes ajustados manualmente por usuário.
+
+## Plano tecnico - Remover senha enviada na criacao da conta
+Objetivo: nao enviar a senha do usuario/empresa por email ou WhatsApp ao criar conta.
+
+### Diagnostico (onde acontece hoje)
+- `backend/src/controllers/UserController.ts`:
+  - Email de boas-vindas inclui `Senha: ${password}`.
+  - Mensagem WhatsApp de cadastro inclui `Senha: ${password}`.
+
+### Ajustes planejados (sem implementar)
+- Remover a linha de senha dos templates de email e WhatsApp.
+- Substituir por orientacao segura:
+  - "Acesse o painel e defina sua senha" ou "Use recuperar senha".
+- Manter envio de nome, email e data de vencimento do trial.
+
+## Checklist de implementacao (marcar feito)
+- [x] Criar helper `backend/src/utils/contactName.ts` com:
+  - `isInvalidContactName`
+  - `resolveBestContactName`
+- [x] Atualizar `backend/src/queues.ts` (linhas ~201-210):
+  - evitar `name = number`
+  - usar `pushName` quando existir
+  - fallback "Contato <numero>"
+- [x] Atualizar `backend/src/services/ContactServices/CreateOrUpdateContactService.ts`:
+  - corrigir nome invalido usando helper
+  - nao sobrescrever nome valido
+  - nao alterar grupos
+- [x] Deduplicar LID/numero em `backend/src/services/WbotServices/verifyContact.ts`:
+  - consolidar LID no contato do numero
+  - impedir criar contato com `number = LID`
+  - migrar `number` quando contato existir por LID
+- [x] Criar job de backfill:
+  - `backend/src/jobs/FixInvalidContactNamesJob.ts`
+  - log de analisados/corrigidos
+- [x] Remover senha dos templates em `backend/src/controllers/UserController.ts`:
+  - email de boas-vindas
+  - WhatsApp de boas-vindas
+- [ ] Testes manuais:
+  - contato com pushName
+  - contato sem pushName
+  - verificar nao duplicar LID/numero

@@ -11,6 +11,7 @@ import Whatsapp from "../../models/Whatsapp";
 import * as Sentry from "@sentry/node";
 import { ENABLE_LID_DEBUG } from "../../config/debug";
 import { normalizeJid } from "../../utils";
+import { isInvalidContactName, resolveBestContactName } from "../../utils/contactName";
 const axios = require("axios");
 
 interface ExtraInfo extends ContactCustomField {
@@ -101,6 +102,16 @@ const CreateOrUpdateContactService = async ({
     const fallbackRemoteJid = normalizeJid(
       remoteJid || (isGroup ? `${cleanNumber}@g.us` : `${cleanNumber}@s.whatsapp.net`)
     );
+
+    let contactName = name;
+    if (!isGroup && isInvalidContactName(contactName)) {
+      contactName = resolveBestContactName({
+        pushName: contactName,
+        integrationName: contactName,
+        profileName: contactName,
+        number: cleanNumber
+      });
+    }
 
     let createContact = false;
     const publicFolder = path.resolve(__dirname, "..", "..", "..", "public");
@@ -226,8 +237,16 @@ const CreateOrUpdateContactService = async ({
         updateImage = true;
       }
 
-      if (contact.name === number) {
-        contact.name = name;
+      if (!isGroup && isInvalidContactName(contact.name)) {
+        const bestName = resolveBestContactName({
+          pushName: contactName,
+          integrationName: contactName,
+          profileName: contactName,
+          number: cleanNumber
+        });
+        if (!isInvalidContactName(bestName) && contact.name !== bestName) {
+          contact.name = bestName;
+        }
       }
 
       await contact.save(); // Ensure save() is called to trigger updatedAt
@@ -304,7 +323,7 @@ const CreateOrUpdateContactService = async ({
 
         // Criando contato com LID quando disponível
         contact = await Contact.create({
-          name,
+          name: contactName,
           number: cleanNumber, // Usar o número limpo aqui
           email,
           birthDate: processedBirthDate, // 🎂 INCLUIR NO CREATE
@@ -382,7 +401,7 @@ const CreateOrUpdateContactService = async ({
 
       try {
         contact = await Contact.create({
-          name,
+          name: contactName,
           number: cleanNumber, // Usar o número limpo aqui
           email,
           birthDate: processedBirthDate, // 🎂 INCLUIR NO CREATE

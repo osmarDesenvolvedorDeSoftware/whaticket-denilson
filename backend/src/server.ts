@@ -8,6 +8,7 @@ import Company from "./models/Company";
 import BullQueue from './libs/queue';
 import { startQueueProcess } from "./queues";
 import { startLidSyncJob } from "./jobs/LidSyncJob";
+import { startFixInvalidContactNamesJob } from "./jobs/FixInvalidContactNamesJob";
 
 const server = app.listen(process.env.PORT, async () => {
   const companies = await Company.findAll({
@@ -31,6 +32,7 @@ const server = app.listen(process.env.PORT, async () => {
   }
 
   startLidSyncJob();
+  startFixInvalidContactNamesJob();
   logger.info(`Servidor iniciado na porta ${process.env.PORT}`);
 });
 

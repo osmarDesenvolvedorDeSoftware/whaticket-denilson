@@ -162,10 +162,10 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
       const _email = {
         to: email,
         subject: `Login e senha da Empresa ${companyName}`,
-        text: `Olá ${name}, este é um email sobre o cadastro da ${companyName}!<br><br>
-        Segue os dados da sua empresa:<br><br>Nome: ${companyName}<br>Email: ${email}<br>Senha: ${password}<br>Data Vencimento Trial: ${dateToClient(
+        text: `Ola ${name}, este e um email sobre o cadastro da ${companyName}!<br><br>
+        Segue os dados da sua empresa:<br><br>Nome: ${companyName}<br>Email: ${email}<br>Data Vencimento Trial: ${dateToClient(
           date
-        )}`
+        )}<br><br>Para definir sua senha, use a opcao "Recuperar senha" no painel.`
       };
 
       await SendMail(_email);
@@ -184,9 +184,17 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
         const whatsappId = whatsappCompany.whatsapps[0].id;
         const wbot = await getWbot(whatsappId);
 
-        const body = `Olá ${name}, este é uma mensagem sobre o cadastro da ${companyName}!\n\nSegue os dados da sua empresa:\n\nNome: ${companyName}\nEmail: ${email}\nSenha: ${password}\nData Vencimento Trial: ${dateToClient(
+        const body = `Ola ${name}, este e uma mensagem sobre o cadastro da ${companyName}!
+
+Segue os dados da sua empresa:
+
+Nome: ${companyName}
+Email: ${email}
+Data Vencimento Trial: ${dateToClient(
           date
-        )}`;
+        )}
+
+Para definir sua senha, use "Recuperar senha" no painel.`;
 
         await wbot.sendMessage(`55${phone}@s.whatsapp.net`, { text: body });
       }

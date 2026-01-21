@@ -95,10 +95,18 @@ export async function verifyContact(
   // Extrair qualquer número de telefone adicional que possa estar presente
   const extractedPhone = extractedId.split(':')[0]; // Remove parte após ":" se existir
 
-  // Determinar número e LID adequadamente
-  let number = extractedPhone;
-  console.log("[DEBUG RODRIGO] number", number)
+  // Determinar n?mero e LID adequadamente
+  const senderPnNumber = msgContact.senderPn
+    ? msgContact.senderPn.replace(/\D/g, "")
+    : "";
   let originalLid = msgContact.lid || null;
+  const lidJid = isLid ? (originalLid || msgContact.id) : null;
+  const lidNumber = lidJid ? lidJid.split("@")[0] : "";
+  let number = extractedPhone;
+  if (isLid && senderPnNumber) {
+    number = senderPnNumber;
+  }
+  console.log("[DEBUG RODRIGO] number", number)
   console.log("[DEBUG RODRIGO] originalLid", originalLid)
 
   // Se o ID estiver no formato telefone:XX@s.whatsapp.net, extraia apenas o telefone
@@ -120,7 +128,7 @@ export async function verifyContact(
     profilePicUrl,
     isGroup,
     companyId,
-    lid: originalLid  // Adicionar o LID aos dados do contato quando disponível
+    lid: lidJid || originalLid // Adicionar o LID aos dados do contato quando dispon?vel
   };
 
   if (isGroup) {
@@ -131,16 +139,28 @@ export async function verifyContact(
     let foundContact: Contact | null = null;
     if (isLid) {
       console.log("[DEBUG RODRIGO] isLid", JSON.stringify(msgContact, null, 2))
-      foundContact = await Contact.findOne({
-        where: {
-          companyId,
-          [Op.or]: [
-            { lid: originalLid ? originalLid : msgContact.id },
-            { number: number },
-            { remoteJid: originalLid ? originalLid : msgContact.id }],
-        },
-        include: ["tags", "extraInfo", "whatsappLidMap"]
-      });
+      if (senderPnNumber) {
+        foundContact = await Contact.findOne({
+          where: {
+            companyId,
+            number: senderPnNumber
+          },
+          include: ["tags", "extraInfo", "whatsappLidMap"]
+        });
+      }
+      if (!foundContact) {
+        foundContact = await Contact.findOne({
+          where: {
+            companyId,
+            [Op.or]: [
+              { lid: lidJid ? lidJid : msgContact.id },
+              { number: lidNumber },
+              { remoteJid: lidJid ? lidJid : msgContact.id }
+            ]
+          },
+          include: ["tags", "extraInfo", "whatsappLidMap"]
+        });
+      }
     } else {
       console.log("[DEBUG RODRIGO] No isLid", JSON.stringify(msgContact, null, 2))
       foundContact = await Contact.findOne({
@@ -153,6 +173,26 @@ export async function verifyContact(
     console.log("[DEBUG RODRIGO] foundContact", foundContact?.id)
     if (isLid) {
       if (foundContact) {
+        if (lidJid) {
+          await checkAndDedup(foundContact, lidJid);
+          if (foundContact.lid !== lidJid) {
+            await foundContact.update({ lid: lidJid });
+          }
+          const lidMap = await WhatsappLidMap.findOne({
+            where: {
+              companyId,
+              lid: lidJid,
+              contactId: foundContact.id
+            }
+          });
+          if (!lidMap) {
+            await WhatsappLidMap.create({
+              companyId,
+              lid: lidJid,
+              contactId: foundContact.id
+            });
+          }
+        }
         return updateContact(foundContact, {
           profilePicUrl: contactData.profilePicUrl
         });
@@ -161,7 +201,7 @@ export async function verifyContact(
       const foundMappedContact = await WhatsappLidMap.findOne({
         where: {
           companyId,
-          lid: number
+          lid: lidJid ? lidJid : msgContact.id
         },
         include: [
           {
@@ -181,7 +221,7 @@ export async function verifyContact(
       const partialLidContact = await Contact.findOne({
         where: {
           companyId,
-          number: number.substring(0, number.indexOf("@"))
+          number: lidNumber
         },
         include: ["tags", "extraInfo"]
       });
