@@ -257,39 +257,43 @@ const Contacts = () => {
     setSelectAllMode(false); // Desativa modo "todos da empresa" quando seleciona individualmente
   };
 
-  const handleSelectAllContacts = () => {
-    if (selectAllMode) {
-      // Se já está em modo "todos", desmarcar tudo
+  const handleSelectAllContacts = async () => {
+    if (selectedContacts.size > 0) {
       setSelectedContacts(new Set());
       setSelectAllMode(false);
-    } else {
-      // Verificar se todos da página atual estão selecionados
-      const currentPageIds = contacts.map(contact => contact.id);
-      const allCurrentSelected = currentPageIds.every(id => selectedContacts.has(id));
-      
-      if (allCurrentSelected && selectedContacts.size === currentPageIds.length) {
-        // Se todos da página estão selecionados, ativar modo "todos da empresa"
-        setSelectAllMode(true);
-        setSelectedContacts(new Set()); // Limpar seleção individual
-      } else {
-        // Selecionar todos da página atual
-        setSelectedContacts(new Set(currentPageIds));
-        setSelectAllMode(false);
-      }
-    }
-  };
-
-
-  const handleSelectTopBatch = () => {
-    if (contacts.length === 0) {
-      toast.warning("Nenhum contato carregado para selecionar");
       return;
     }
-    const limitedContacts = contacts.slice(0, MAX_BULK_DELETE);
-    setSelectedContacts(new Set(limitedContacts.map(contact => contact.id)));
+
+    const collectedIds = new Set(contacts.map(contact => contact.id));
+    let page = 1;
+    let hasMorePages = true;
+
+    while (hasMorePages && collectedIds.size < MAX_BULK_DELETE) {
+      try {
+        const { data } = await api.get("/contacts/", {
+          params: {
+            searchParam,
+            pageNumber: page,
+            contactTag: JSON.stringify(selectedTags)
+          }
+        });
+
+        dispatch({ type: "LOAD_CONTACTS", payload: data.contacts });
+        data.contacts.forEach(contact => collectedIds.add(contact.id));
+        hasMorePages = data.hasMore;
+        page += 1;
+      } catch (err) {
+        toastError(err);
+        break;
+      }
+    }
+
+    const limitedIds = Array.from(collectedIds).slice(0, MAX_BULK_DELETE);
+    setSelectedContacts(new Set(limitedIds));
     setSelectAllMode(false);
-    toast.success(`Selecionados ${limitedContacts.length} contatos`);
+    toast.success(`Selecionados ${limitedIds.length} contatos`);
   };
+
 
   // Limpar seleção quando contatos mudam
   useEffect(() => {
@@ -724,20 +728,6 @@ const Contacts = () => {
               ),
             }}
           />
-
-          {!selectAllMode && contacts.length > 0 && (
-            <div className={classes.bulkActions}>
-              <Tooltip title={`Selecionar at? ${MAX_BULK_DELETE} contatos`}>
-                <Button
-                  variant="outlined"
-                  color="default"
-                  onClick={handleSelectTopBatch}
-                >
-                  Selecionar 1000
-                </Button>
-              </Tooltip>
-            </div>
-          )}
 
           
           {/* Botões de ação em lote */}
