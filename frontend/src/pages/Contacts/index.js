@@ -279,6 +279,18 @@ const Contacts = () => {
     }
   };
 
+
+  const handleSelectTopBatch = () => {
+    if (contacts.length === 0) {
+      toast.warning("Nenhum contato carregado para selecionar");
+      return;
+    }
+    const limitedContacts = contacts.slice(0, MAX_BULK_DELETE);
+    setSelectedContacts(new Set(limitedContacts.map(contact => contact.id)));
+    setSelectAllMode(false);
+    toast.success(`Selecionados ${limitedContacts.length} contatos`);
+  };
+
   // Limpar seleção quando contatos mudam
   useEffect(() => {
     setSelectedContacts(new Set());
@@ -712,6 +724,21 @@ const Contacts = () => {
               ),
             }}
           />
+
+          {!selectAllMode && contacts.length > 0 && (
+            <div className={classes.bulkActions}>
+              <Tooltip title={`Selecionar at? ${MAX_BULK_DELETE} contatos`}>
+                <Button
+                  variant="outlined"
+                  color="default"
+                  onClick={handleSelectTopBatch}
+                >
+                  Selecionar 1000
+                </Button>
+              </Tooltip>
+            </div>
+          )}
+
           
           {/* Botões de ação em lote */}
           {isAnyContactSelected && (
