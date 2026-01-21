@@ -750,7 +750,7 @@ export const bulkDelete = async (
     contactIds: Yup.array()
       .of(idSchema.required("Contact ID is required"))
       .min(1, "At least one contact ID is required")
-      .max(100, "Maximum 100 contacts can be deleted at once")
+      .max(1000, "Maximum 1000 contacts can be deleted at once")
       .required("Contact IDs array is required")
   });
 

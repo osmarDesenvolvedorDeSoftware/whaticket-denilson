@@ -18,77 +18,103 @@ const DeleteAllContactsService = async ({
   companyId,
   excludeIds = []
 }: Request): Promise<number> => {
-  const transaction: Transaction = await sequelize.transaction();
+  const batchSize = 1000;
+  let totalDeleted = 0;
+  let lastId = 0;
 
   try {
-    // Construir condição WHERE
     const whereCondition: any = { companyId };
-    
+
     if (excludeIds.length > 0) {
       whereCondition.id = {
         [Op.notIn]: excludeIds
       };
     }
 
-    // Buscar todos os IDs dos contatos que serão excluídos
-    const contactsToDelete = await Contact.findAll({
-      where: whereCondition,
-      attributes: ["id"],
-      transaction
-    });
+    while (true) {
+      const batchWhere = {
+        ...whereCondition,
+        id: {
+          ...(whereCondition.id || {}),
+          [Op.gt]: lastId
+        }
+      };
 
-    if (contactsToDelete.length === 0) {
+      const contactsToDelete = await Contact.findAll({
+        where: batchWhere,
+        attributes: ["id"],
+        order: [["id", "ASC"]],
+        limit: batchSize
+      });
+
+      if (contactsToDelete.length === 0) {
+        break;
+      }
+
+      const contactIds = contactsToDelete.map(contact => contact.id);
+      lastId = contactIds[contactIds.length - 1];
+
+      const transaction: Transaction = await sequelize.transaction();
+
+      try {
+        await ContactCustomField.destroy({
+          where: {
+            contactId: {
+              [Op.in]: contactIds
+            }
+          },
+          transaction
+        });
+
+        await ContactWallet.destroy({
+          where: {
+            contactId: {
+              [Op.in]: contactIds
+            },
+            companyId
+          },
+          transaction
+        });
+
+        await ContactTag.destroy({
+          where: {
+            contactId: {
+              [Op.in]: contactIds
+            }
+          },
+          transaction
+        });
+
+        const deletedCount = await Contact.destroy({
+          where: {
+            companyId,
+            id: {
+              [Op.in]: contactIds
+            }
+          },
+          transaction
+        });
+
+        await transaction.commit();
+        totalDeleted += deletedCount;
+      } catch (error) {
+        await transaction.rollback();
+        throw error;
+      }
+    }
+
+    if (totalDeleted === 0) {
       throw new AppError("No contacts found for deletion", 404);
     }
 
-    const contactIds = contactsToDelete.map(contact => contact.id);
-
-    // Excluir relacionamentos em ordem (FK constraints)
-    await ContactCustomField.destroy({
-      where: {
-        contactId: {
-          [Op.in]: contactIds
-        }
-      },
-      transaction
-    });
-
-    await ContactWallet.destroy({
-      where: {
-        contactId: {
-          [Op.in]: contactIds
-        },
-        companyId
-      },
-      transaction
-    });
-
-    await ContactTag.destroy({
-      where: {
-        contactId: {
-          [Op.in]: contactIds
-        }
-      },
-      transaction
-    });
-
-    // Excluir contatos
-    const deletedCount = await Contact.destroy({
-      where: whereCondition,
-      transaction
-    });
-
-    await transaction.commit();
-    return deletedCount;
-
+    return totalDeleted;
   } catch (error) {
-    await transaction.rollback();
     console.error("Error in DeleteAllContactsService:", error);
-    
+
     if (error instanceof AppError) {
       throw error;
     }
-    
+
     throw new AppError("Failed to delete all contacts", 500);
   }
 };
