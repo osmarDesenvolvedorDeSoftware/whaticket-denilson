@@ -192,7 +192,7 @@ Objetivo: nao enviar a senha do usuario/empresa por email ou WhatsApp ao criar c
 - [x] Remover senha dos templates em `backend/src/controllers/UserController.ts`:
   - email de boas-vindas
   - WhatsApp de boas-vindas
-- [ ] Testes manuais:
+- [x] Testes manuais:
   - contato com pushName
   - contato sem pushName
   - verificar nao duplicar LID/numero

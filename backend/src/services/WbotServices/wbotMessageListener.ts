@@ -446,6 +446,20 @@ const getContactMessage = async (msg: proto.IWebMessageInfo, wbot: Session) => {
   console.log("[DEBUG RODRIGO] senderPn", senderPn)
   const remoteJid = !key.remoteJid.includes("@lid") ? key.remoteJid : key.remoteJid.includes("@lid") && senderPn !== null ? senderPn : lid;
   console.log("[DEBUG RODRIGO] remoteJid", remoteJid)
+
+  const debugListRaw = process.env.PUSHNAME_DEBUG_NUMBERS || "";
+  if (debugListRaw) {
+    const debugList = debugListRaw
+      .split(",")
+      .map(item => item.replace(/\D/g, ""))
+      .filter(Boolean);
+    const candidate = (senderPn || rawNumber || "").replace(/\D/g, "");
+    if (candidate && debugList.includes(candidate)) {
+      logger.info(
+        `[PUSHNAME-DEBUG] number=${candidate} fromMe=${msg.key.fromMe} isGroup=${isGroup} pushName=${msg.pushName || ""} remoteJid=${remoteJid} lid=${lid || ""}`
+      );
+    }
+  }
   // Usa o identificador normalizado que considera o lid
   // const normalizedId = normalizeContactIdentifier(msg);
 
