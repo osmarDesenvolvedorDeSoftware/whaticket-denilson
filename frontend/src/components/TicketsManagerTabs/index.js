@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { useTheme } from "@material-ui/core/styles";
+import useMediaQuery from "@material-ui/core/useMediaQuery";
 import { useHistory } from "react-router-dom";
 import {
   makeStyles,
@@ -117,7 +118,7 @@ const useStyles = makeStyles((theme) => ({
   },
 
   tabPanelItem: {
-    minWidth: "33%",
+    minWidth: "25%",
     fontSize: 11,
     marginLeft: 0,
     transition: "all 0.3s ease",
@@ -125,6 +126,7 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: "8px",
     margin: "0 4px",
     opacity: 0.7,
+    whiteSpace: "nowrap",
     "&.Mui-selected": {
       opacity: 1,
       backgroundColor: theme.mode === "light" ? "rgba(0, 0, 0, 0.05)" : "rgba(255, 255, 255, 0.1)",
@@ -135,12 +137,12 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: theme.mode === "light" ? "rgba(0, 0, 0, 0.03)" : "rgba(255, 255, 255, 0.05)",
     },
     [theme.breakpoints.down('sm')]: {
-      minWidth: "30%",
+      minWidth: "28%",
       fontSize: 9,
       padding: theme.spacing(0.5),
     },
     [theme.breakpoints.down('xs')]: {
-      minWidth: "28%",
+      minWidth: "26%",
       fontSize: 8,
     },
   },
@@ -389,6 +391,7 @@ const useStyles = makeStyles((theme) => ({
 
 const TicketsManagerTabs = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const classes = useStyles();
   const history = useHistory();
 
@@ -917,8 +920,9 @@ const TicketsManagerTabs = () => {
           onChange={handleChangeTabOpen}
           indicatorColor="primary"
           textColor="primary"
-          variant="fullWidth"
+          variant="scrollable"
           scrollButtons="auto"
+          allowScrollButtonsMobile
           TabIndicatorProps={{ className: classes.tabIndicator }}
           className={classes.modernTabs}
         >
@@ -1032,7 +1036,7 @@ const TicketsManagerTabs = () => {
                       transition: "all 0.2s ease",
                     }}
                   >
-                    Atendente aguardando
+                    {isMobile ? "Atend. aguard." : "Atendente aguardando"}
                   </Typography>
                 </Grid>
               </Grid>
@@ -1072,7 +1076,7 @@ const TicketsManagerTabs = () => {
                       transition: "all 0.2s ease",
                     }}
                   >
-                    Cliente aguardando
+                    {isMobile ? "Cliente aguard." : "Cliente aguardando"}
                   </Typography>
                 </Grid>
               </Grid>
