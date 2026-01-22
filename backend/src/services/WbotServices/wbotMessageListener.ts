@@ -97,6 +97,7 @@ import request from "request";
 import { Session } from "../../libs/wbot";
 import { getGroupMetadataCache, groupMetadataCache, updateGroupMetadataCache } from "../../utils/RedisGroupCache";
 import sgpListenerOficial from "../IntegrationsServices/Sgp/sgpListenerOficial";
+import { isInvalidContactName } from "../../utils/contactName";
 
 let ffmpegPath: string;
 if (os.platform() === "win32") {
@@ -135,6 +136,7 @@ export interface IMe {
   id: string;
   lid?: string;
   senderPn?: string;
+  verifiedBizName?: string;
 }
 
 const lidUpdateMutex = new Mutex();
@@ -478,11 +480,17 @@ const getContactMessage = async (msg: proto.IWebMessageInfo, wbot: Session) => {
     ? {
       id: getSenderMessage(msg, wbot),
       name: msg.pushName,
+      verifiedBizName: (msg as any)?.verifiedBizName || null,
       lid: lid
     }
     : {
       id: remoteJid,
-      name: msg.key.fromMe ? rawNumber : msg.pushName,
+      name: msg.key.fromMe
+        ? rawNumber
+        : isInvalidContactName(msg.pushName) && (msg as any)?.verifiedBizName
+          ? (msg as any).verifiedBizName
+          : msg.pushName,
+      verifiedBizName: (msg as any)?.verifiedBizName || null,
       lid: lid
     };
 };
