@@ -12,6 +12,7 @@ import * as queues from "../../queues";
 import logger from "../../utils/logger";
 import { IMe } from "./wbotMessageListener";
 import { Session } from "../../libs/wbot";
+import { isInvalidContactName, resolveBestContactName } from "../../utils/contactName";
 
 const lidUpdateMutex = new Mutex();
 
@@ -130,6 +131,12 @@ export async function verifyContact(
     companyId,
     lid: lidJid || originalLid // Adicionar o LID aos dados do contato quando dispon?vel
   };
+  const resolvedName = resolveBestContactName({
+    pushName: contactData.name,
+    integrationName: contactData.name,
+    profileName: contactData.name,
+    number: contactData.number
+  });
 
   if (isGroup) {
     return CreateOrUpdateContactService(contactData);
@@ -193,9 +200,13 @@ export async function verifyContact(
             });
           }
         }
-        return updateContact(foundContact, {
+        const contactUpdates: Partial<Contact> = {
           profilePicUrl: contactData.profilePicUrl
-        });
+        };
+        if (!isGroup && isInvalidContactName(foundContact.name)) {
+          contactUpdates.name = resolvedName;
+        }
+        return updateContact(foundContact, contactUpdates);
       }
 
       const foundMappedContact = await WhatsappLidMap.findOne({
@@ -213,9 +224,13 @@ export async function verifyContact(
       });
 
       if (foundMappedContact) {
-        return updateContact(foundMappedContact.contact, {
+        const contactUpdates: Partial<Contact> = {
           profilePicUrl: contactData.profilePicUrl
-        });
+        };
+        if (!isGroup && isInvalidContactName(foundMappedContact.contact.name)) {
+          contactUpdates.name = resolvedName;
+        }
+        return updateContact(foundMappedContact.contact, contactUpdates);
       }
 
       const partialLidContact = await Contact.findOne({
@@ -227,10 +242,14 @@ export async function verifyContact(
       });
 
       if (partialLidContact) {
-        return updateContact(partialLidContact, {
+        const contactUpdates: Partial<Contact> = {
           number: contactData.number,
           profilePicUrl: contactData.profilePicUrl
-        });
+        };
+        if (!isGroup && isInvalidContactName(partialLidContact.name)) {
+          contactUpdates.name = resolvedName;
+        }
+        return updateContact(partialLidContact, contactUpdates);
       }
     } else if (foundContact) {
       if (!foundContact.whatsappLidMap) {
@@ -291,9 +310,13 @@ export async function verifyContact(
           }
         }
       }
-      return updateContact(foundContact, {
+      const contactUpdates: Partial<Contact> = {
         profilePicUrl: contactData.profilePicUrl
-      });
+      };
+      if (!isGroup && isInvalidContactName(foundContact.name)) {
+        contactUpdates.name = resolvedName;
+      }
+      return updateContact(foundContact, contactUpdates);
     } else if (!isGroup && !foundContact) {
       let newContact: Contact | null = null;
 
