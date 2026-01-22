@@ -307,14 +307,22 @@ const TicketsListCustom = (props) => {
                 });
             }
             // console.log(shouldUpdateTicket(data.ticket))
-            if (data.action === "update" &&
-                shouldUpdateTicket(data.ticket) && (awaiting || data.ticket.status === status)) {
-                dispatch({
-                    type: "UPDATE_TICKET",
-                    payload: data.ticket,
-                    status: status,
-                    sortDir: sortTickets
-                });
+            if (data.action === "update") {
+                if (shouldUpdateTicket(data.ticket) && (awaiting || data.ticket.status === status)) {
+                    dispatch({
+                        type: "UPDATE_TICKET",
+                        payload: data.ticket,
+                        status: status,
+                        sortDir: sortTickets
+                    });
+                } else if (awaiting && data.ticket?.id) {
+                    dispatch({
+                        type: "DELETE_TICKET",
+                        payload: data.ticket.id,
+                        status: status,
+                        sortDir: sortTickets
+                    });
+                }
             }
 
             // else if (data.action === "update" && shouldUpdateTicketUser(data.ticket) && data.ticket.status === status) {
@@ -340,14 +348,22 @@ const TicketsListCustom = (props) => {
         };
 
         const onCompanyAppMessageTicketsList = (data) => {
-            if (data.action === "create" &&
-                shouldUpdateTicket(data.ticket) && (awaiting || data.ticket.status === status)) {
-                dispatch({
-                    type: "UPDATE_TICKET_UNREAD_MESSAGES",
-                    payload: data.ticket,
-                    status: status,
-                    sortDir: sortTickets
-                });
+            if (data.action === "create") {
+                if (shouldUpdateTicket(data.ticket) && (awaiting || data.ticket.status === status)) {
+                    dispatch({
+                        type: "UPDATE_TICKET_UNREAD_MESSAGES",
+                        payload: data.ticket,
+                        status: status,
+                        sortDir: sortTickets
+                    });
+                } else if (awaiting && data.ticket?.id) {
+                    dispatch({
+                        type: "DELETE_TICKET",
+                        payload: data.ticket.id,
+                        status: status,
+                        sortDir: sortTickets
+                    });
+                }
             }
             // else if (data.action === "create" && shouldUpdateTicketUser(data.ticket) && data.ticket.status === status) {
             //     dispatch({
@@ -369,11 +385,14 @@ const TicketsListCustom = (props) => {
         };
 
         const onConnectTicketsList = () => {
-            if (status) {
-                socket.emit("joinTickets", status);
-            } else {
-                socket.emit("joinNotification");
-            }
+        if (awaiting) {
+            socket.emit("joinTickets", "open");
+            socket.emit("joinTickets", "pending");
+        } else if (status) {
+            socket.emit("joinTickets", status);
+        } else {
+            socket.emit("joinNotification");
+        }
         }
 
         socket.on("connect", onConnectTicketsList)
@@ -382,7 +401,10 @@ const TicketsListCustom = (props) => {
         socket.on(`company-${companyId}-contact`, onCompanyContactTicketsList);
 
         return () => {
-            if (status) {
+            if (awaiting) {
+                socket.emit("leaveTickets", "open");
+                socket.emit("leaveTickets", "pending");
+            } else if (status) {
                 socket.emit("leaveTickets", status);
             } else {
                 socket.emit("leaveNotification");
