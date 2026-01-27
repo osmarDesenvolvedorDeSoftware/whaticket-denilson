@@ -268,6 +268,7 @@ const useStyles = makeStyles((theme) => ({
     "& .MuiTabs-flexContainer": {
       flexWrap: "nowrap",
       alignItems: "center",
+      justifyContent: "center",
     },
   },
 
@@ -1078,6 +1079,7 @@ const TicketsManagerTabs = () => {
           variant={isMobile ? "scrollable" : "fullWidth"}
           scrollButtons={isMobile ? "auto" : "off"}
           allowScrollButtonsMobile
+          centered={isMobile}
           TabIndicatorProps={{ className: classes.tabIndicator }}
           className={classes.modernTabs}
         >
