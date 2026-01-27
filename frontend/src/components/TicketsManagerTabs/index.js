@@ -119,6 +119,8 @@ const useStyles = makeStyles((theme) => ({
 
   tabPanelItem: {
     minWidth: "25%",
+    flex: 1,
+    maxWidth: "none",
     fontSize: 14,
     minHeight: 46,
     marginLeft: 0,
@@ -139,6 +141,7 @@ const useStyles = makeStyles((theme) => ({
     },
     [theme.breakpoints.down('sm')]: {
       minWidth: "28%",
+      flex: "unset",
       fontSize: 13,
       padding: theme.spacing(0.5),
     },
@@ -1072,8 +1075,8 @@ const TicketsManagerTabs = () => {
           onChange={handleChangeTabOpen}
           indicatorColor="primary"
           textColor="primary"
-          variant="scrollable"
-          scrollButtons="auto"
+          variant={isMobile ? "scrollable" : "fullWidth"}
+          scrollButtons={isMobile ? "auto" : "off"}
           allowScrollButtonsMobile
           TabIndicatorProps={{ className: classes.tabIndicator }}
           className={classes.modernTabs}
