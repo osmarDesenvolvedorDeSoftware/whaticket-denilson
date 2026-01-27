@@ -186,10 +186,10 @@ const useStyles = makeStyles((theme) => ({
     borderWidth: "1px",
     borderStyle: "solid",
     marginTop: theme.spacing(0.5),
-    marginBottom: theme.spacing(1),
+    marginBottom: theme.spacing(0.5),
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    padding: theme.spacing(0.5),
+    padding: theme.spacing(0.25),
     flexWrap: "wrap",
     rowGap: theme.spacing(0.5),
     columnGap: theme.spacing(0.5),
@@ -248,12 +248,12 @@ const useStyles = makeStyles((theme) => ({
   },
   
   modernTabs: {
-    minHeight: 58,
-    height: 58,
+    minHeight: 56,
+    height: 56,
     borderRadius: 8,
     backgroundColor: theme.mode === "light" ? "rgba(0, 0, 0, 0.02)" : "rgba(255, 255, 255, 0.02)",
     boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-    padding: "8px 4px 6px 4px", // Ajuste para dar mais presenÃ§a Ã  aba
+    padding: "6px 4px 4px 4px", // Ajuste para aproximar do topo
     margin: "8px 0",
     transition: "all 0.3s ease",
     position: "relative",
