@@ -1,7 +1,6 @@
 import { FlowBuilderModel } from "../../models/FlowBuilder";
 import { WebhookModel } from "../../models/Webhook";
 import { randomString } from "../../utils/randomCode";
-import QueueIntegrations from "../../models/QueueIntegrations";
 
 interface Request {
   userId: number;
@@ -33,26 +32,6 @@ const CreateFlowBuilderService = async ({
       company_id: companyId,
       name: name,
     });
-
-    const existingIntegration = await QueueIntegrations.findOne({
-      where: {
-        companyId,
-        type: "flowbuilder",
-        name
-      }
-    });
-
-    if (!existingIntegration) {
-      await QueueIntegrations.create({
-        type: "flowbuilder",
-        name,
-        projectName: name,
-        jsonContent: "",
-        urlN8N: "",
-        language: "",
-        companyId
-      });
-    }
 
     return flow;
   } catch (error) {

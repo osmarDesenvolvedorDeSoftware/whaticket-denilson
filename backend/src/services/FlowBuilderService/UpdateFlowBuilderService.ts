@@ -1,7 +1,6 @@
 import { FlowBuilderModel } from "../../models/FlowBuilder";
 import { WebhookModel } from "../../models/Webhook";
 import { randomString } from "../../utils/randomCode";
-import QueueIntegrations from "../../models/QueueIntegrations";
 
 interface Request {
   companyId: number;
@@ -27,32 +26,9 @@ const UpdateFlowBuilderService = async ({
       return 'exist'
     }
 
-    const flow = await FlowBuilderModel.findOne({
-      where: { id: flowId, company_id: companyId }
-    });
-
-    if (!flow) {
-      return 'exist';
-    }
-
-    const previousName = flow.name;
-
-    await FlowBuilderModel.update({ name }, {
+    const flow = await FlowBuilderModel.update({ name }, {
       where: {id: flowId, company_id: companyId}
     });
-
-    if (previousName && previousName !== name) {
-      await QueueIntegrations.update(
-        { name, projectName: name },
-        {
-          where: {
-            companyId,
-            type: "flowbuilder",
-            name: previousName
-          }
-        }
-      );
-    }
 
     return 'ok';
   } catch (error) {
