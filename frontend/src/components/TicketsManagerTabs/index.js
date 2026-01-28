@@ -492,6 +492,7 @@ const TicketsManagerTabs = () => {
   const [isFilterActive, setIsFilterActive] = useState(false);
 
   const showAllStorageKey = `ticketsShowAll-${user?.companyId}-${user?.id}`;
+  const tabOpenStorageKey = `ticketsTabOpen-${user?.companyId}-${user?.id}`;
 
   useEffect(() => {
     const stored = localStorage.getItem(showAllStorageKey);
@@ -499,6 +500,22 @@ const TicketsManagerTabs = () => {
       setShowAllTickets(true);
     }
   }, [showAllStorageKey]);
+
+  useEffect(() => {
+    const storedTabOpen = localStorage.getItem(tabOpenStorageKey);
+    if (storedTabOpen && tabOpen !== storedTabOpen) {
+      const allowed = ["open", "pending", "group", "awaiting_agent", "awaiting_customer"];
+      if (allowed.includes(storedTabOpen)) {
+        setTabOpen(storedTabOpen);
+      }
+    }
+  }, [tabOpenStorageKey, setTabOpen]);
+
+  useEffect(() => {
+    if (tabOpen) {
+      localStorage.setItem(tabOpenStorageKey, tabOpen);
+    }
+  }, [tabOpen, tabOpenStorageKey]);
 
   useEffect(() => {
     localStorage.setItem(showAllStorageKey, showAllTickets ? "true" : "false");
